@@ -14,6 +14,7 @@ Mirrors the visual structure of ``lynx.display`` (lynx-fundamental):
 """
 
 from __future__ import annotations
+from lynx_investor_core.translations import t as _t  # i18n helper
 
 from typing import Optional
 
@@ -207,7 +208,7 @@ def render_costs(console: Console, report: ETFReport) -> None:
     c = report.costs
     if not c:
         return
-    t = Table(title="Costs", show_lines=True, border_style="yellow")
+    t = Table(title=_t("costs"), show_lines=True, border_style="yellow")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=18)
     t.add_column("Assessment", min_width=28)
@@ -240,7 +241,7 @@ def render_income(console: Console, report: ETFReport) -> None:
     i = report.income
     if not i:
         return
-    t = Table(title="Income & Distributions", show_lines=True, border_style="green")
+    t = Table(title=_t("income"), show_lines=True, border_style="green")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=18)
     t.add_column("Assessment", min_width=28)
@@ -271,7 +272,7 @@ def render_liquidity(console: Console, report: ETFReport) -> None:
     l = report.liquidity
     if not l:
         return
-    t = Table(title="Size & Liquidity", show_lines=True, border_style="cyan")
+    t = Table(title=_t("liquidity"), show_lines=True, border_style="cyan")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=18)
     t.add_column("Assessment", min_width=28)
@@ -310,7 +311,7 @@ def render_performance(console: Console, report: ETFReport) -> None:
         return
 
     # Returns table — magenta border like lynx-fundamental's growth section
-    t = Table(title="Performance (Total Return)",
+    t = Table(title=_t("performance"),
               show_lines=True, border_style="magenta")
     t.add_column("Window", style="bold", min_width=22)
     t.add_column("Return", justify="right", min_width=18)
@@ -330,7 +331,7 @@ def render_performance(console: Console, report: ETFReport) -> None:
     console.print(t)
 
     # Risk-adjusted returns — cyan border to flag separate concept
-    t2 = Table(title="Risk-Adjusted Returns",
+    t2 = Table(title=f"{_t('performance')} — {_t('score')}",
                show_lines=True, border_style="cyan")
     t2.add_column("Metric", style="bold", min_width=22)
     t2.add_column("Value", justify="right", min_width=18)
@@ -362,7 +363,7 @@ def render_allocation(console: Console, report: ETFReport) -> None:
         return
 
     # Diversification overview — bold yellow like the moat panel
-    t = Table(title="Diversification & Allocation",
+    t = Table(title=_t("diversification"),
               show_lines=True, border_style="bold yellow")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=18)
@@ -429,7 +430,7 @@ def render_risk(console: Console, report: ETFReport) -> None:
     r = report.risk
     if not r:
         return
-    t = Table(title="Risk Profile",
+    t = Table(title=_t("risk"),
               show_lines=True, border_style="red")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=18)
@@ -823,7 +824,7 @@ def render_tail_risk(console: Console, report: ETFReport) -> None:
         return
     if all(v is None for v in (r.var_95_1y, r.cvar_95_1y, r.skewness_3y, r.kurtosis_3y)):
         return
-    t = Table(title="Tail Risk", show_lines=True, border_style="red")
+    t = Table(title=_t("risk") + " — Tail", show_lines=True, border_style="red")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", justify="right", min_width=14)
     t.add_column("Interpretation", min_width=32)
@@ -867,7 +868,7 @@ def render_esg(console: Console, report: ETFReport) -> None:
               e.carbon_intensity, e.controversy_score, e.exclusions]
     if all(not f for f in fields):
         return
-    t = Table(title="Sustainability (ESG)",
+    t = Table(title="ESG",
               show_lines=True, border_style="green")
     t.add_column("Metric", style="bold", min_width=22)
     t.add_column("Value", min_width=22)
