@@ -10,6 +10,8 @@ that UIs can render sections as data becomes available.
 
 from __future__ import annotations
 
+from lynx_investor_core.translations import t as _t
+
 import dataclasses
 from typing import Callable, Optional
 
@@ -103,7 +105,7 @@ def run_progressive_analysis(
             on_progress(stage, report)
 
     # 1. Resolve (validates that it's an ETF) -----------------------------
-    console.print(f"[bold cyan]Resolving identifier:[/] {identifier}")
+    console.print(f"[bold cyan]{_t('resolving_identifier')}[/] {identifier}")
     try:
         ticker, isin = resolve_identifier(identifier)
     except NotAnETFError as exc:
@@ -119,14 +121,14 @@ def run_progressive_analysis(
     if not refresh and has_cache(ticker):
         age = get_cache_age_hours(ticker)
         age_str = f"{age:.1f}h ago" if age is not None else "unknown age"
-        console.print(f"[bold green]Using cached data[/] [dim](fetched {age_str})[/]")
+        console.print(f"[bold green]{_t('using_cached_data')}[/] [dim]({_t('fetched_ago').format(age=age_str)})[/]")
         cached = load_cached_report(ticker)
         if cached:
             try:
                 report = _dict_to_report(cached)
                 if isin and report.profile.isin is None:
                     report.profile.isin = isin
-                console.print("[dim]Use --refresh to force fresh data download.[/]")
+                console.print(f"[dim]{_t('use_refresh')}[/]")
                 _notify("complete", report)
                 return report
             except Exception as exc:
@@ -134,9 +136,9 @@ def run_progressive_analysis(
 
     # 3. Fresh fetch — profile --------------------------------------------
     if refresh:
-        console.print("[yellow]Refreshing data from network...[/]")
+        console.print(f"[yellow]{_t('refreshing_data')}[/]")
 
-    console.print("[cyan]Fetching ETF profile...[/]")
+    console.print(f"[cyan]{_t('fetching_etf_profile')}[/]")
     info = fetch_info(ticker)
     profile = fetch_profile(ticker, info=info)
     profile.isin = isin
@@ -155,7 +157,7 @@ def run_progressive_analysis(
     tier = profile.tier
 
     # 4. Price history (shared across several calculators) ----------------
-    console.print("[cyan]Fetching price history...[/]")
+    console.print(f"[cyan]{_t('fetching_history')}[/]")
     hist = fetch_history(ticker, period="10y")
 
     # 5. Costs -------------------------------------------------------------
@@ -171,7 +173,7 @@ def run_progressive_analysis(
     _notify("liquidity", report)
 
     # 8. Allocation (need holdings before performance to enrich it) -------
-    console.print("[cyan]Fetching holdings & allocation...[/]")
+    console.print(f"[cyan]{_t('fetching_holdings')}[/]")
     holdings = fetch_holdings(ticker, info=info)
     sectors = fetch_sector_breakdown(ticker, info=info)
     countries = fetch_country_breakdown(ticker, info=info)
@@ -224,18 +226,18 @@ def run_progressive_analysis(
 
     # 15. News ------------------------------------------------------------
     if download_news:
-        console.print("[cyan]Fetching news...[/]")
+        console.print(f"[cyan]{_t('fetching_news')}[/]")
         try:
             report.news = fetch_all_news(ticker, profile.name) or []
-            console.print(f"[green]Found {len(report.news)} articles[/]")
+            console.print(f"[green]{_t('found_articles').format(n=len(report.news))}[/]")
         except Exception as exc:
             console.print(f"[yellow]News fetch failed: {exc}[/]")
     _notify("news", report)
 
     # 13. Save ------------------------------------------------------------
-    console.print("[cyan]Saving analysis...[/]")
+    console.print(f"[cyan]{_t('saving_analysis')}[/]")
     path = save_analysis_report(ticker, _report_to_dict(report))
-    console.print(f"[bold green]Analysis saved to:[/] {path}")
+    console.print(f"[bold green]{_t('analysis_saved_to')}[/] {path}")
     _notify("complete", report)
 
     return report

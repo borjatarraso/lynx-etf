@@ -17,6 +17,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+from lynx_investor_core.translations import t as _t
+
 from lynx_etf import (
     APP_NAME,
     SUITE_LABEL,
@@ -300,7 +302,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
               text=f"v{__version__}  {BULLET}  {SUITE_LABEL}",
               style="Dim.TLabel").pack(anchor=tk.W, pady=(2, 0))
 
-    quit_btn = ttk.Button(hero, text="Quit", style="Subtle.TButton",
+    quit_btn = ttk.Button(hero, text=_t("btn_quit"), style="Subtle.TButton",
                           command=root.quit)
     quit_btn.pack(side=tk.RIGHT, padx=(8, 0))
 
@@ -308,7 +310,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
     bar = ttk.Frame(root, style="Lynx.TFrame", padding=(16, 4, 16, 8))
     bar.pack(fill=tk.X)
 
-    ttk.Label(bar, text="ETF Ticker or ISIN:", style="Lynx.TLabel").pack(
+    ttk.Label(bar, text=f"{_t('ticker_or_isin')}:", style="Lynx.TLabel").pack(
         side=tk.LEFT, padx=(0, 8))
 
     ticker_var = tk.StringVar(value=initial_ticker or "")
@@ -316,16 +318,16 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                       style="Lynx.TEntry", font=FONT)
     entry.pack(side=tk.LEFT, padx=(0, 8))
 
-    analyze_btn = ttk.Button(bar, text="Analyse", style="Lynx.TButton")
+    analyze_btn = ttk.Button(bar, text=_t("btn_analyse"), style="Lynx.TButton")
     analyze_btn.pack(side=tk.LEFT, padx=(0, 4))
 
-    refresh_btn = ttk.Button(bar, text="Refresh", style="Subtle.TButton")
+    refresh_btn = ttk.Button(bar, text=_t("btn_refresh"), style="Subtle.TButton")
     refresh_btn.pack(side=tk.LEFT, padx=(0, 4))
 
-    export_btn = ttk.Button(bar, text="Export…", style="Subtle.TButton")
+    export_btn = ttk.Button(bar, text=_t("btn_export"), style="Subtle.TButton")
     export_btn.pack(side=tk.LEFT, padx=(0, 12))
 
-    status_var = tk.StringVar(value="Ready.")
+    status_var = tk.StringVar(value=_t("ready_"))
     status_lbl = tk.Label(bar, textvariable=status_var, bg=BG, fg=FG_DIM,
                           font=FONT_SMALL)
     status_lbl.pack(side=tk.LEFT, padx=(8, 0))

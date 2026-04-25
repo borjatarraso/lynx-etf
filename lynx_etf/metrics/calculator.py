@@ -30,6 +30,8 @@ so existing tests keep working.
 
 from __future__ import annotations
 
+from lynx_investor_core.translations import t as _t
+
 import math
 from typing import Optional
 
@@ -844,10 +846,10 @@ def build_verdict(
     return Verdict(
         overall_score=overall,
         verdict=verdict,
-        summary=f"Overall score {overall:.0f}/100 across {len(scores)} categories.",
+        summary=_t("overall_score_summary").format(score=int(overall), n=len(scores)),
         category_scores=scores,
         strengths=strengths,
         risks=risks_out,
-        tier_note=f"Classified as {profile.tier.value} by AUM.",
+        tier_note=_t("classified_as_tier").format(tier=profile.tier.value),
         suitable_for=suitable,
     )

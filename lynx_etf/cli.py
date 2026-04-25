@@ -294,7 +294,7 @@ def _cmd_analyze(args) -> int:
     if args.export:
         path = _do_export(report, args.export, args.output)
         if path:
-            errc.print(f"[bold green]Exported to:[/] {path}")
+            errc.print(f"[bold green]{_t('exported_to')}[/] {path}")
     return 0
 
 

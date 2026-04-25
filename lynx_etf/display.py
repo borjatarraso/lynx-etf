@@ -116,12 +116,12 @@ def tier_style(tier: FundSizeTier) -> str:
 
 def _tier_label(tier: FundSizeTier) -> str:
     return {
-        FundSizeTier.MEGA:  "MEGA AUM — Flagship-scale liquidity & cost basis",
-        FundSizeTier.LARGE: "LARGE AUM — Highly liquid, mainstream allocation",
-        FundSizeTier.MID:   "MID AUM — Stable but watch spreads in stress",
-        FundSizeTier.SMALL: "SMALL AUM — Niche / younger fund, tighter due diligence",
-        FundSizeTier.MICRO: "MICRO AUM — Closure / liquidity risk material",
-        FundSizeTier.NANO:  "NANO AUM — Speculative; closure risk high",
+        FundSizeTier.MEGA:  _t("tier_mega_desc"),
+        FundSizeTier.LARGE: _t("tier_large_desc"),
+        FundSizeTier.MID:   _t("tier_mid_desc"),
+        FundSizeTier.SMALL: _t("tier_small_desc"),
+        FundSizeTier.MICRO: _t("tier_micro_desc"),
+        FundSizeTier.NANO:  _t("tier_nano_desc"),
     }.get(tier, "UNKNOWN")
 
 
@@ -164,7 +164,7 @@ def render_header(console: Console, report: ETFReport) -> None:
         header.append(f"  ISIN: {p.isin}", style="dim on blue")
     console.print(Panel(
         header,
-        title="[bold]LYNX ETF Analysis[/]",
+        title=f"[bold]{_t('lynx_etf_analysis')}[/]",
         border_style="blue",
     ))
 
@@ -181,7 +181,7 @@ def render_header(console: Console, report: ETFReport) -> None:
 
     # Profile card
     profile_table = Table(show_header=False, box=None, padding=(0, 2))
-    profile_table.add_column("Key", style="bold")
+    profile_table.add_column(_t("field"), style="bold")
     profile_table.add_column(_t("value"))
     profile_table.add_row(_t("name"), p.name or "[dim]N/A[/]")
     profile_table.add_row(_t("family"), p.fund_family or "[dim]N/A[/]")
@@ -217,22 +217,22 @@ def render_costs(console: Console, report: ETFReport) -> None:
     if er is None:
         er_assess = "[dim]N/A[/]"
     elif er < 0.001:
-        er_assess = "[bold green]Industry-leading[/]"
+        er_assess = f"[bold green]{_t('industry_leading')}[/]"
     elif er < 0.002:
-        er_assess = "[green]Very low — institutional-tier[/]"
+        er_assess = f"[green]{_t('very_low_institutional')}[/]"
     elif er < 0.005:
-        er_assess = "[cyan]Low — competitive[/]"
+        er_assess = f"[cyan]{_t('low_competitive')}[/]"
     elif er < 0.01:
-        er_assess = "[yellow]Average[/]"
+        er_assess = f"[yellow]{_t('average_cost')}[/]"
     else:
-        er_assess = "[bold red]High — drag on long-term return[/]"
-    t.add_row("Expense Ratio (TER)", _colored_er(er), er_assess)
+        er_assess = f"[bold red]{_t('high_cost_drag')}[/]"
+    t.add_row(_t("expense_ratio"), _colored_er(er), er_assess)
 
-    t.add_row("Management Fee", fmt_pct(c.management_fee, 3), "")
+    t.add_row(_t("management_fee"), fmt_pct(c.management_fee, 3), "")
     t.add_row("Bid-Ask Spread", fmt_bps(c.spread_bps),
               "[dim]Round-trip cost on top of TER[/]" if c.spread_bps else "")
     if c.estimated_cost_10k_year1 is not None:
-        t.add_row("Est. yr-1 cost on $10k",
+        t.add_row(_t("est_cost_1y"),
                   f"${c.estimated_cost_10k_year1:.2f}", "")
     console.print(t)
 
@@ -257,13 +257,13 @@ def render_income(console: Console, report: ETFReport) -> None:
             return "[cyan]Modest[/]"
         return "[dim]Low / accumulating[/]"
 
-    t.add_row("Dividend Yield (TTM)", fmt_pct(i.dividend_yield),
+    t.add_row(_t("dividend_yield_ttm"), fmt_pct(i.dividend_yield),
               _yield_assess(i.dividend_yield))
-    t.add_row("SEC 30-day Yield", fmt_pct(i.sec_yield_30d),
+    t.add_row(_t("sec_yield_30d"), fmt_pct(i.sec_yield_30d),
               _yield_assess(i.sec_yield_30d))
-    t.add_row("Distribution Frequency",
+    t.add_row(_t("distribution_frequency"),
               i.distribution_frequency or "[dim]N/A[/]", "")
-    t.add_row("Distribution Policy",
+    t.add_row(_t("distribution_policy"),
               i.distribution_policy or "[dim]N/A[/]", "")
     console.print(t)
 
@@ -280,23 +280,23 @@ def render_liquidity(console: Console, report: ETFReport) -> None:
     aum_assess = "[dim]N/A[/]"
     if l.aum is not None:
         if l.aum >= 50e9:
-            aum_assess = "[bold green]Mega scale[/]"
+            aum_assess = f"[bold green]{_t('mega_scale')}[/]"
         elif l.aum >= 10e9:
-            aum_assess = "[green]Large, mainstream[/]"
+            aum_assess = f"[green]{_t('large_mainstream')}[/]"
         elif l.aum >= 1e9:
-            aum_assess = "[cyan]Mid-tier — solid liquidity[/]"
+            aum_assess = f"[cyan]{_t('mid_solid_liquidity')}[/]"
         elif l.aum >= 100e6:
-            aum_assess = "[yellow]Small — watch spreads[/]"
+            aum_assess = f"[yellow]{_t('small_watch_spreads')}[/]"
         else:
-            aum_assess = "[bold red]Micro / closure risk[/]"
+            aum_assess = f"[bold red]{_t('micro_closure_risk')}[/]"
     t.add_row(_t("aum"), fmt_money(l.aum), aum_assess)
 
     t.add_row("Avg Daily Volume", fmt_int(l.avg_volume), "")
     t.add_row("Avg Daily $ Volume", fmt_money(l.avg_dollar_volume), "")
     t.add_row("Bid-Ask Spread", fmt_bps(l.spread_bps), "")
-    t.add_row("Fund Age", fmt_years(l.fund_age_years),
-              "[green]Track record established[/]"
-              if (l.fund_age_years or 0) >= 5 else "[yellow]Younger fund[/]")
+    t.add_row(_t("fund_age"), fmt_years(l.fund_age_years),
+              f"[green]{_t('track_record_established')}[/]"
+              if (l.fund_age_years or 0) >= 5 else f"[yellow]{_t('younger_fund')}[/]")
     t.add_row("Shares Outstanding", fmt_int(l.shares_outstanding), "")
     if l.premium_discount_pct is not None:
         pd = l.premium_discount_pct
@@ -313,9 +313,9 @@ def render_performance(console: Console, report: ETFReport) -> None:
     # Returns table — magenta border like lynx-fundamental's growth section
     t = Table(title=_t("performance"),
               show_lines=True, border_style="magenta")
-    t.add_column("Window", style="bold", min_width=22)
-    t.add_column("Return", justify="right", min_width=18)
-    t.add_column("Notes", min_width=28)
+    t.add_column(_t("window"), style="bold", min_width=22)
+    t.add_column(_t("return"), justify="right", min_width=18)
+    t.add_column(_t("notes"), min_width=28)
     rows = [
         ("1M",  p.return_1m, ""),
         ("3M",  p.return_3m, ""),
@@ -350,9 +350,9 @@ def render_performance(console: Console, report: ETFReport) -> None:
             return "[yellow]Weak[/]"
         return "[bold red]Negative[/]"
 
-    t2.add_row("Sharpe (1Y)", fmt_num(p.sharpe_1y), _sharpe_assess(p.sharpe_1y))
-    t2.add_row("Sharpe (3Y)", fmt_num(p.sharpe_3y), _sharpe_assess(p.sharpe_3y))
-    t2.add_row("Sortino (3Y)", fmt_num(p.sortino_3y),
+    t2.add_row(_t("sharpe_1y"), fmt_num(p.sharpe_1y), _sharpe_assess(p.sharpe_1y))
+    t2.add_row(_t("sharpe_3y"), fmt_num(p.sharpe_3y), _sharpe_assess(p.sharpe_3y))
+    t2.add_row(_t("sortino_3y"), fmt_num(p.sortino_3y),
                _sharpe_assess(p.sortino_3y))
     console.print(t2)
 
@@ -380,30 +380,30 @@ def render_allocation(console: Console, report: ETFReport) -> None:
             return "[cyan]Moderate[/]"
         return "[green]Well-diversified[/]"
 
-    t.add_row("Holdings Count", fmt_int(a.holdings_count), "")
-    t.add_row("Top 10 Concentration", fmt_pct(a.top10_concentration),
+    t.add_row(_t("holdings_count"), fmt_int(a.holdings_count), "")
+    t.add_row(_t("top10_concentration"), fmt_pct(a.top10_concentration),
               _conc_assess(a.top10_concentration))
-    t.add_row("Sector HHI", fmt_num(a.herfindahl_sector, 3),
+    t.add_row(_t("sector_hhi"), fmt_num(a.herfindahl_sector, 3),
               "[dim]Lower = more even sector mix[/]"
               if a.herfindahl_sector is not None else "")
-    t.add_row("Sector Count", fmt_int(a.sector_count), "")
-    t.add_row("Country Count", fmt_int(a.country_count), "")
+    t.add_row(_t("sector_count"), fmt_int(a.sector_count), "")
+    t.add_row(_t("country_count"), fmt_int(a.country_count), "")
     console.print(t)
 
     if a.sector_breakdown:
-        st = Table(title="Sector Breakdown",
+        st = Table(title=_t("sector_alloc_title"),
                    show_lines=True, border_style="blue")
-        st.add_column("Sector", style="bold", min_width=22)
-        st.add_column("Weight", justify="right", min_width=12)
+        st.add_column(_t("sector"), style="bold", min_width=22)
+        st.add_column(_t("weight"), justify="right", min_width=12)
         for sector, weight in a.sector_breakdown[:12]:
             st.add_row(str(sector), fmt_pct(weight))
         console.print(st)
 
     if a.country_breakdown:
-        ct = Table(title="Country Breakdown",
+        ct = Table(title=_t("country_alloc_title"),
                    show_lines=True, border_style="blue")
-        ct.add_column("Country", style="bold", min_width=22)
-        ct.add_column("Weight", justify="right", min_width=12)
+        ct.add_column(_t("country"), style="bold", min_width=22)
+        ct.add_column(_t("weight"), justify="right", min_width=12)
         for country, weight in a.country_breakdown[:10]:
             ct.add_row(str(country), fmt_pct(weight))
         console.print(ct)
@@ -413,12 +413,12 @@ def render_holdings(console: Console, report: ETFReport) -> None:
     if not report.holdings:
         return
     n = min(len(report.holdings), 15)
-    t = Table(title=f"Top {n} Holdings",
+    t = Table(title=_t("top_n_holdings").format(n=n),
               show_lines=True, border_style="cyan")
     t.add_column("#", justify="right", min_width=3)
-    t.add_column("Symbol", style="bold cyan")
-    t.add_column("Name", min_width=24)
-    t.add_column("Weight", justify="right", min_width=10)
+    t.add_column(_t("symbol"), style="bold cyan")
+    t.add_column(_t("name"), min_width=24)
+    t.add_column(_t("weight"), justify="right", min_width=10)
     ordered = sorted(report.holdings, key=lambda h: h.weight or 0, reverse=True)[:15]
     for i, h in enumerate(ordered, 1):
         t.add_row(str(i), h.symbol or "[dim]—[/]",
@@ -458,15 +458,15 @@ def render_risk(console: Console, report: ETFReport) -> None:
             return "[yellow]Severe[/]"
         return "[bold red]Crash-tier[/]"
 
-    t.add_row("Volatility (1Y)", fmt_pct(r.volatility_1y), _vol_assess(r.volatility_1y))
-    t.add_row("Volatility (3Y)", fmt_pct(r.volatility_3y), _vol_assess(r.volatility_3y))
-    t.add_row("Max Drawdown (3Y)", fmt_pct(r.max_drawdown_3y),
+    t.add_row(_t("volatility_1y"), fmt_pct(r.volatility_1y), _vol_assess(r.volatility_1y))
+    t.add_row(_t("volatility_3y"), fmt_pct(r.volatility_3y), _vol_assess(r.volatility_3y))
+    t.add_row(_t("max_drawdown_3y"), fmt_pct(r.max_drawdown_3y),
               _drawdown_assess(r.max_drawdown_3y))
-    t.add_row("Beta (3Y)", fmt_num(r.beta_3y),
+    t.add_row(_t("beta_3y"), fmt_num(r.beta_3y),
               "[dim]Sensitivity to benchmark[/]" if r.beta_3y is not None else "")
-    t.add_row("Tracking Error", fmt_pct(r.tracking_error),
+    t.add_row(_t("tracking_error"), fmt_pct(r.tracking_error),
               "[dim]Annualised σ of return gap[/]" if r.tracking_error is not None else "")
-    t.add_row("Tracking Difference", fmt_pct(r.tracking_difference),
+    t.add_row(_t("tracking_difference"), fmt_pct(r.tracking_difference),
               "[dim]TER-adjusted return gap[/]" if r.tracking_difference is not None else "")
     t.add_row("R²", fmt_num(r.r_squared, 3),
               "[dim]Explained variance vs benchmark[/]" if r.r_squared is not None else "")
@@ -499,11 +499,11 @@ def render_verdict(console: Console, report: ETFReport) -> None:
 
     # Category breakdown
     if v.category_scores:
-        t = Table(title="Category Scores",
+        t = Table(title=_t("category_scores"),
                   show_lines=True, border_style="cyan")
         t.add_column(_t("category"), style="bold", min_width=18)
-        t.add_column("Score", justify="right", min_width=12)
-        t.add_column("Bar", min_width=24)
+        t.add_column(_t("score"), justify="right", min_width=12)
+        t.add_column(_t("bar"), min_width=24)
         for cat, score in v.category_scores.items():
             try:
                 s = float(score)
@@ -520,8 +520,8 @@ def render_verdict(console: Console, report: ETFReport) -> None:
     risks = getattr(v, "risks", None) or []
     if strengths or risks:
         sr = Table(show_header=True, border_style="green")
-        sr.add_column("Strengths", style="green", ratio=1)
-        sr.add_column("Risks", style="red", ratio=1)
+        sr.add_column(_t("strengths"), style="green", ratio=1)
+        sr.add_column(_t("risks"), style="red", ratio=1)
         max_len = max(len(strengths), len(risks))
         for i in range(max_len):
             s = strengths[i] if i < len(strengths) else ""
