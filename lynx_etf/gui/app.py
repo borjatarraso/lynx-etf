@@ -246,6 +246,12 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
     # Suite theme cycler — keeps ETF in lockstep with the rest of the Suite.
     try:
         from lynx_investor_core.gui_themes import ThemeCycler, SUITE_GUI_THEMES, apply_theme
+        # Register user-saved lynx_theme JSON themes (~/.config/lynx-theme)
+        try:
+            from lynx_theme.storage import register_user_themes as _reg_user_themes
+            _reg_user_themes()
+        except Exception:
+            pass
         cycler = ThemeCycler(root, start="lynx-theme")
         try:
             apply_theme(root, theme="lynx-theme")
