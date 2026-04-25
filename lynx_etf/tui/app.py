@@ -17,6 +17,8 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Input, Label, Static
 
+from lynx_investor_core.translations import t as _t
+
 from lynx_etf import (
     APP_NAME,
     SUITE_LABEL,
@@ -33,7 +35,7 @@ from lynx_etf.tui.themes import THEME_NAMES, register_all_themes
 # ---------------------------------------------------------------------------
 
 class AboutModal(ModalScreen):
-    BINDINGS = [Binding("escape", "dismiss_modal", "Close")]
+    BINDINGS = [Binding("escape", "dismiss_modal", _t("tui_close"))]
 
     DEFAULT_CSS = """
     AboutModal {
@@ -118,10 +120,10 @@ class LynxETFApp(App):
     """
 
     BINDINGS = [
-        Binding("ctrl+l", "clear", "Clear"),
-        Binding("a", "about", "About"),
-        Binding("t", "cycle_theme", "Theme"),
-        Binding("q", "quit", "Quit"),
+        Binding("ctrl+l", "clear", _t("tui_clear")),
+        Binding("a", "about", _t("btn_about")),
+        Binding("t", "cycle_theme", _t("tui_theme")),
+        Binding("q", "quit", _t("btn_quit")),
     ]
 
     def __init__(self, initial_ticker: str | None = None) -> None:
@@ -132,15 +134,15 @@ class LynxETFApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         with Horizontal(id="ticker-bar"):
-            yield Static("[bold]ETF Ticker:[/]")
-            yield Input(placeholder="e.g. SPY, QQQ, VTI", id="ticker")
+            yield Static(f"[bold]{_t('tui_etf_ticker_label')}[/]")
+            yield Input(placeholder=_t("tui_ticker_placeholder"), id="ticker")
         with VerticalScroll(id="output"):
             yield Static(
                 f"[bold blue]{APP_NAME} v{__version__}[/]\n"
                 f"[dim]{SUITE_LABEL}[/]\n\n"
-                "Enter an ETF ticker or ISIN and press Enter.\n"
+                f"{_t('tui_intro_etf')}\n"
                 "[dim]Stocks, mutual funds and index funds are rejected at the resolver level.[/]\n\n"
-                "[dim]Keys:  a = About    t = Cycle theme    q = Quit[/]",
+                f"[dim]{_t('tui_keys_help')}[/]",
                 id="body",
             )
         yield Footer()

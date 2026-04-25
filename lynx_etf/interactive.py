@@ -20,6 +20,8 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
+from lynx_investor_core.translations import t as _t
+
 from lynx_etf import APP_NAME, SUITE_LABEL, __version__
 from lynx_etf.core.ticker import NotAnETFError
 
@@ -63,20 +65,20 @@ def run_interactive(args=None) -> int:
 
     if is_testing():
         console.print(Panel(
-            "[bold yellow]TESTING MODE[/]\n"
+            f"[bold yellow]{_t('testing_mode')}[/]\n"
             "Data is stored in [bold]data_test/[/] — production data is never touched.\n"
             "All fetches are fresh (cache is not used).",
             border_style="yellow",
         ))
     else:
         console.print(Panel(
-            "[bold green]PRODUCTION MODE[/]\n"
+            f"[bold green]{_t('production_mode')}[/]\n"
             "Data is stored in [bold]data/[/] — cached analyses are reused automatically.\n"
             "Use [bold]refresh[/] to force a fresh download.",
             border_style="green",
         ))
 
-    console.print(Panel(MENU, border_style="cyan", title="[bold]Interactive Mode[/]"))
+    console.print(Panel(MENU, border_style="cyan", title=f"[bold]{_t('interactive_mode_title')}[/]"))
 
     while True:
         prompt_color = "yellow" if is_testing() else "cyan"
@@ -88,7 +90,7 @@ def run_interactive(args=None) -> int:
             )
             raw = input().strip()
         except (EOFError, KeyboardInterrupt):
-            console.print("\n[dim]Goodbye![/]")
+            console.print(f"\n[dim]{_t('goodbye')}[/]")
             return 0
 
         if not raw:
@@ -99,7 +101,7 @@ def run_interactive(args=None) -> int:
         arg = parts[1].strip() if len(parts) > 1 else ""
 
         if cmd in ("quit", "exit", "q"):
-            console.print("[dim]Goodbye![/]")
+            console.print(f"[dim]{_t('goodbye')}[/]")
             return 0
 
         if cmd in ("help", "h", "?"):
@@ -118,12 +120,12 @@ def run_interactive(args=None) -> int:
             target = arg
             if not target:
                 try:
-                    target = Prompt.ask("[bold]Ticker to drop (or 'all')[/]")
+                    target = Prompt.ask(f"[bold]{_t('ticker_to_drop_prompt')}[/]")
                 except (EOFError, KeyboardInterrupt):
-                    console.print("[dim]Cancelled.[/]")
+                    console.print(f"[dim]{_t('cancelled')}[/]")
                     continue
             if not target:
-                console.print("[red]No ticker provided.[/]")
+                console.print(f"[red]{_t('no_ticker_provided')}[/]")
                 continue
             from lynx_etf.cli import _cmd_drop_cache
             _cmd_drop_cache(target)
@@ -146,12 +148,12 @@ def run_interactive(args=None) -> int:
         if cmd == "search":
             if not arg:
                 try:
-                    arg = Prompt.ask("[bold]Search query[/]")
+                    arg = Prompt.ask(f"[bold]{_t('search_query_prompt')}[/]")
                 except (EOFError, KeyboardInterrupt):
-                    console.print("[dim]Cancelled.[/]")
+                    console.print(f"[dim]{_t('cancelled')}[/]")
                     continue
             if not arg:
-                console.print("[red]No query provided.[/]")
+                console.print(f"[red]{_t('no_query_provided')}[/]")
                 continue
             from lynx_etf.cli import _cmd_search
             _cmd_search(arg)
@@ -162,18 +164,18 @@ def run_interactive(args=None) -> int:
             target = arg
             if not target:
                 try:
-                    target = Prompt.ask("[bold]Enter ETF ticker or ISIN[/]")
+                    target = Prompt.ask(f"[bold]{_t('enter_etf_id_prompt')}[/]")
                 except (EOFError, KeyboardInterrupt):
-                    console.print("[dim]Cancelled.[/]")
+                    console.print(f"[dim]{_t('cancelled')}[/]")
                     continue
             if not target:
-                console.print("[red]No identifier provided.[/]")
+                console.print(f"[red]{_t('no_identifier_provided')}[/]")
                 continue
             _analyze(target, refresh=force)
             continue
 
         # Bare token → try as ticker
-        console.print(f"[dim]Unknown command '{cmd}'. Trying as ticker...[/]")
+        console.print(f"[dim]{_t('unknown_command_trying').format(cmd=cmd)}[/]")
         _analyze(raw, refresh=is_testing())
 
 
@@ -198,7 +200,7 @@ def _analyze(identifier: str, *, refresh: bool = False) -> None:
         console.print("[dim]Check your connection and try again.[/]")
         return
     except KeyboardInterrupt:
-        console.print("[dim]Analysis cancelled.[/]")
+        console.print(f"[dim]{_t('analysis_cancelled')}[/]")
         return
 
     render_full_report(console, report)

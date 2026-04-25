@@ -735,7 +735,7 @@ def render_premium_discount_stats(console: Console, report: ETFReport) -> None:
 def render_calendar_returns(console: Console, report: ETFReport) -> None:
     if not report.performance or not report.performance.calendar_returns:
         return
-    t = Table(title="Calendar-Year Returns",
+    t = Table(title=_t("perf_calendar_year_returns"),
               show_lines=True, border_style="magenta")
     t.add_column("Year", style="bold", min_width=6)
     t.add_column("Return", justify="right", min_width=12)
@@ -765,7 +765,7 @@ def render_capture_ratios(console: Console, report: ETFReport) -> None:
     ]
     if all(f is None for f in fields):
         return
-    t = Table(title="Capture Ratios & Recovery",
+    t = Table(title=_t("perf_capture_recovery"),
               show_lines=True, border_style="cyan")
     t.add_column(_t("metric"), style="bold", min_width=24)
     t.add_column(_t("value"), justify="right", min_width=14)
