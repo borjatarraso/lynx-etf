@@ -1,13 +1,13 @@
 """Lynx ETF — Exchange-Traded Fund analysis tool."""
 
-__version__ = "1.0.0"
+__version__ = "6.0.0"
 __author__ = "Borja Tarraso"
 __author_email__ = "borja.tarraso@member.fsf.org"
 __year__ = "2026"
 __license__ = "BSD-3-Clause"
 
 SUITE_NAME = "Lince Investor Suite"
-SUITE_VERSION = "5.5.1"
+SUITE_VERSION = "6.0.0"
 SUITE_LABEL = f"{SUITE_NAME} v{SUITE_VERSION}"
 APP_NAME = "Lynx ETF Analysis"
 

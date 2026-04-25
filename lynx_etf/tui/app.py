@@ -1,65 +1,168 @@
 """Textual TUI for lynx-etf.
 
-Compact dashboard: input an ETF ticker, press Enter, see every panel
-rendered in the main viewport. Suite theme switching via ``t``.
+Mirrors the look-and-feel of ``lynx.tui.app``: house ``lynx-dark`` /
+``lynx-light`` themes plus the full Suite gallery, About modal with the
+shared logo, mode-aware footer, and ``t`` to cycle themes.
 """
 
 from __future__ import annotations
 
 from rich.console import Console
+from rich.text import Text
 
 from textual import events
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, VerticalScroll
-from textual.widgets import Footer, Header, Input, Static
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.screen import ModalScreen
+from textual.widgets import Footer, Header, Input, Label, Static
 
-from lynx_etf import APP_NAME, __version__
+from lynx_etf import (
+    APP_NAME,
+    SUITE_LABEL,
+    __version__,
+    get_about_text,
+    get_logo_ascii,
+)
 from lynx_etf.core.ticker import NotAnETFError
+from lynx_etf.tui.themes import THEME_NAMES, register_all_themes
 
+
+# ---------------------------------------------------------------------------
+# About modal
+# ---------------------------------------------------------------------------
+
+class AboutModal(ModalScreen):
+    BINDINGS = [Binding("escape", "dismiss_modal", "Close")]
+
+    DEFAULT_CSS = """
+    AboutModal {
+        align: center middle;
+    }
+    #about-dialog {
+        width: 80%;
+        height: 80%;
+        max-width: 110;
+        background: $surface;
+        border: round $primary;
+        padding: 1 2;
+    }
+    #about-title {
+        text-align: center;
+        padding: 1 0;
+    }
+    #about-scroll {
+        height: 1fr;
+        padding: 0 1;
+    }
+    #about-hint {
+        text-align: center;
+        color: $text-muted;
+        padding-top: 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        about = get_about_text()
+        logo = get_logo_ascii()
+        logo_block = f"[green]{logo}[/]\n\n" if logo else ""
+        with Vertical(id="about-dialog"):
+            yield Label(f"[bold blue]{about['name']}[/]", id="about-title")
+            yield VerticalScroll(
+                Static(
+                    f"{logo_block}"
+                    f"[bold blue]{about['name']} v{about['version']}[/]\n"
+                    f"[dim]Part of {about['suite']} v{about['suite_version']}[/]\n"
+                    f"[dim]Released {about['year']}[/]\n\n"
+                    f"[bold]Developed by:[/] {about['author']}\n"
+                    f"[bold]Contact:[/]      {about['email']}\n"
+                    f"[bold]License:[/]      {about['license']}\n\n"
+                    f"{about['description']}\n\n"
+                    f"[bold cyan]BSD 3-Clause License[/]\n"
+                    f"[dim]{about['license_text']}[/]",
+                    id="about-content",
+                ),
+                id="about-scroll",
+            )
+            yield Label("[dim]Press Escape to close[/]", id="about-hint")
+
+    def action_dismiss_modal(self) -> None:
+        self.dismiss()
+
+
+# ---------------------------------------------------------------------------
+# Main app
+# ---------------------------------------------------------------------------
 
 class LynxETFApp(App):
     CSS = """
-    #ticker-bar { height: 3; padding: 0 1; }
-    #output { padding: 1 2; height: 1fr; }
-    Input { width: 30%; }
+    Screen {
+        background: $background;
+    }
+    #ticker-bar {
+        height: 3;
+        padding: 0 1;
+        background: $surface;
+    }
+    #ticker-bar > Static {
+        padding: 1 1 0 1;
+        color: $accent;
+    }
+    #output {
+        padding: 1 2;
+        height: 1fr;
+    }
+    Input {
+        width: 30%;
+    }
     """
 
     BINDINGS = [
-        ("ctrl+l", "clear", "Clear"),
-        ("t", "cycle_theme", "Theme"),
-        ("q", "quit", "Quit"),
+        Binding("ctrl+l", "clear", "Clear"),
+        Binding("a", "about", "About"),
+        Binding("t", "cycle_theme", "Theme"),
+        Binding("q", "quit", "Quit"),
     ]
 
     def __init__(self, initial_ticker: str | None = None) -> None:
         super().__init__()
         self._initial_ticker = initial_ticker
-        self._theme_names: list[str] = []
         self._theme_idx = 0
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         with Horizontal(id="ticker-bar"):
-            yield Static("[bold cyan]ETF Ticker:[/]")
+            yield Static("[bold]ETF Ticker:[/]")
             yield Input(placeholder="e.g. SPY, QQQ, VTI", id="ticker")
         with VerticalScroll(id="output"):
             yield Static(
-                f"[bold cyan]{APP_NAME} v{__version__}[/]\n"
-                "Enter an ETF ticker or ISIN and press Enter.",
+                f"[bold blue]{APP_NAME} v{__version__}[/]\n"
+                f"[dim]{SUITE_LABEL}[/]\n\n"
+                "Enter an ETF ticker or ISIN and press Enter.\n"
+                "[dim]Stocks, mutual funds and index funds are rejected at the resolver level.[/]\n\n"
+                "[dim]Keys:  a = About    t = Cycle theme    q = Quit[/]",
                 id="body",
             )
         yield Footer()
 
     def on_mount(self) -> None:
         self.title = f"{APP_NAME} v{__version__}"
+        self.sub_title = SUITE_LABEL
+
         try:
-            from lynx_investor_core.themes import register_suite_themes, SUITE_THEME_NAMES
-            register_suite_themes(self)
-            self._theme_names = list(SUITE_THEME_NAMES)
-            if "lynx-theme" in self._theme_names:
-                self.theme = "lynx-theme"
-                self._theme_idx = self._theme_names.index("lynx-theme")
+            register_all_themes(self)
         except Exception:
             pass
+
+        # Default to the house dark theme; fall back to whatever Textual ships.
+        for preferred in ("lynx-dark", "lynx-theme", "textual-dark"):
+            try:
+                self.theme = preferred
+                if preferred in THEME_NAMES:
+                    self._theme_idx = THEME_NAMES.index(preferred)
+                break
+            except Exception:
+                continue
 
         if self._initial_ticker:
             inp = self.query_one("#ticker", Input)
@@ -70,11 +173,14 @@ class LynxETFApp(App):
     def action_clear(self) -> None:
         self.query_one("#body", Static).update("[dim]Cleared.[/]")
 
+    def action_about(self) -> None:
+        self.push_screen(AboutModal())
+
     def action_cycle_theme(self) -> None:
-        if not self._theme_names:
+        if not THEME_NAMES:
             return
-        self._theme_idx = (self._theme_idx + 1) % len(self._theme_names)
-        name = self._theme_names[self._theme_idx]
+        self._theme_idx = (self._theme_idx + 1) % len(THEME_NAMES)
+        name = THEME_NAMES[self._theme_idx]
         try:
             self.theme = name
             self.notify(f"Theme: {name}", timeout=2)
@@ -105,9 +211,6 @@ class LynxETFApp(App):
             return console.export_text(clear=True, styles=True)
 
         text = await self.run_worker(_do, thread=True).wait()
-        # Rich export includes ANSI; Static does not re-interpret ANSI but
-        # rich markup is OK. Use plain text but render as Rich renderable.
-        from rich.text import Text
         body.update(Text.from_ansi(text))
 
 
@@ -115,3 +218,7 @@ def run_tui(initial_ticker: str | None = None) -> int:
     app = LynxETFApp(initial_ticker=initial_ticker)
     app.run()
     return 0
+
+
+# Back-compat alias mirroring lynx-fundamental's class name.
+DashboardApp = LynxETFApp

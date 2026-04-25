@@ -45,6 +45,7 @@ from lynx_etf.metrics.calculator import (
 from lynx_etf.models import (
     AllocationMetrics,
     CostMetrics,
+    ESGProfile,
     ETFProfile,
     ETFReport,
     FundSizeTier,
@@ -52,11 +53,14 @@ from lynx_etf.models import (
     IncomeMetrics,
     LiquidityMetrics,
     NewsArticle,
+    PassiveCheck,
     PerformanceMetrics,
     RiskProfile,
     Verdict,
     classify_tier,
 )
+from lynx_etf.passive_checklist import run_passive_checklist
+from lynx_etf.tips import compose_tips
 
 
 console = Console(stderr=True)
@@ -166,11 +170,7 @@ def run_progressive_analysis(
     report.liquidity = calc_liquidity(info, hist, tier)
     _notify("liquidity", report)
 
-    # 8. Performance -------------------------------------------------------
-    report.performance = calc_performance(info, hist, tier)
-    _notify("performance", report)
-
-    # 9. Allocation --------------------------------------------------------
+    # 8. Allocation (need holdings before performance to enrich it) -------
     console.print("[cyan]Fetching holdings & allocation...[/]")
     holdings = fetch_holdings(ticker, info=info)
     sectors = fetch_sector_breakdown(ticker, info=info)
@@ -178,18 +178,29 @@ def run_progressive_analysis(
     currencies: list[tuple] = []
     asset_classes = fetch_asset_class_breakdown(ticker, info=info)
     report.holdings = holdings
-    report.allocation = calc_allocation(info, holdings, sectors, countries, currencies, asset_classes)
-    _notify("allocation", report)
+    report.allocation = calc_allocation(
+        info, holdings, sectors, countries, currencies, asset_classes,
+    )
 
-    # 10. Risk (vs benchmark if available) --------------------------------
+    # 9. Benchmark history (used by performance + risk) -------------------
     benchmark_hist = None
     if profile.benchmark:
         console.print(f"[cyan]Fetching benchmark {profile.benchmark}...[/]")
         benchmark_hist = fetch_benchmark_history(profile.benchmark, period="5y")
+
+    # 10. Performance (capture ratios need benchmark) ---------------------
+    report.performance = calc_performance(info, hist, tier, benchmark_hist=benchmark_hist)
+    _notify("performance", report)
+    _notify("allocation", report)
+
+    # 11. Risk -----------------------------------------------------------
     report.risk = calc_risk(info, hist, benchmark_hist, tier)
     _notify("risk", report)
 
-    # 11. Verdict ---------------------------------------------------------
+    # 12. ESG (best-effort) ----------------------------------------------
+    report.esg = _build_esg(info)
+
+    # 13. Verdict ---------------------------------------------------------
     report.verdict = build_verdict(
         profile,
         report.costs,
@@ -201,7 +212,17 @@ def run_progressive_analysis(
     )
     _notify("verdict", report)
 
-    # 12. News ------------------------------------------------------------
+    # 14. Passive-investor checklist + educational tips ------------------
+    try:
+        report.passive_checklist = run_passive_checklist(report)
+    except Exception as exc:
+        console.print(f"[yellow]Passive checklist skipped: {exc}[/]")
+    try:
+        report.tips = compose_tips(report)
+    except Exception as exc:
+        console.print(f"[yellow]Tips generation skipped: {exc}[/]")
+
+    # 15. News ------------------------------------------------------------
     if download_news:
         console.print("[cyan]Fetching news...[/]")
         try:
@@ -257,11 +278,43 @@ def _dict_to_report(d: dict) -> ETFReport:
         performance=_maybe(PerformanceMetrics, "performance"),
         allocation=_maybe(AllocationMetrics, "allocation"),
         risk=_maybe(RiskProfile, "risk"),
+        esg=_maybe(ESGProfile, "esg"),
         verdict=_maybe(Verdict, "verdict"),
         holdings=[_build_dc(Holding, h) for h in (d.get("holdings") or [])],
         news=[_build_dc(NewsArticle, n) for n in (d.get("news") or [])],
+        passive_checklist=[
+            _build_dc(PassiveCheck, c)
+            for c in (d.get("passive_checklist") or [])
+        ],
+        tips=list(d.get("tips") or []),
         fetched_at=d.get("fetched_at", ""),
     )
+
+
+# ---------------------------------------------------------------------------
+# ESG construction (best-effort from yfinance "info" payloads)
+# ---------------------------------------------------------------------------
+
+def _build_esg(info: dict) -> Optional[ESGProfile]:
+    score = info.get("esgScore") or info.get("totalEsg")
+    if score is None and not info.get("sfdrArticle"):
+        return None
+
+    try:
+        return ESGProfile(
+            score=float(score) if score is not None else None,
+            sfdr_article=int(info["sfdrArticle"]) if info.get("sfdrArticle") else None,
+            sustainability_rating=info.get("sustainabilityRating"),
+            carbon_intensity=(
+                float(info["carbonIntensity"]) if info.get("carbonIntensity") else None
+            ),
+            controversy_score=(
+                float(info["controversyScore"]) if info.get("controversyScore") else None
+            ),
+            exclusions=list(info.get("esgExclusions") or []),
+        )
+    except (TypeError, ValueError):
+        return None
 
 
 def _build_dc(cls, data: dict):

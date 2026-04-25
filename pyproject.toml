@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "lynx-etf"
-version = "1.0.0"
+version = "6.0.0"
 description     = "Lynx ETF — Exchange-Traded Fund analysis: costs, holdings, allocation, performance, risk"
 readme          = "README.md"
 requires-python = ">=3.10"
@@ -25,7 +25,7 @@ classifiers     = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies    = [
-    "lynx-investor-core>=5.5.1",
+    "lynx-investor-core>=6.0.0",
     "yfinance>=0.2.40",
     "requests>=2.31",
     "beautifulsoup4>=4.12",
