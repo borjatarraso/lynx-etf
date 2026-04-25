@@ -250,12 +250,12 @@ def render_income(console: Console, report: ETFReport) -> None:
         if y is None:
             return "[dim]N/A[/]"
         if y >= 0.04:
-            return "[bold green]High income[/]"
+            return f"[bold green]{_t('yield_high_income')}[/]"
         if y >= 0.02:
-            return "[green]Solid income[/]"
+            return f"[green]{_t('yield_solid_income')}[/]"
         if y >= 0.005:
-            return "[cyan]Modest[/]"
-        return "[dim]Low / accumulating[/]"
+            return f"[cyan]{_t('yield_modest')}[/]"
+        return f"[dim]{_t('yield_low_accumulating')}[/]"
 
     t.add_row(_t("dividend_yield_ttm"), fmt_pct(i.dividend_yield),
               _yield_assess(i.dividend_yield))
@@ -322,8 +322,8 @@ def render_performance(console: Console, report: ETFReport) -> None:
         ("YTD", p.return_ytd, ""),
         ("1Y",  p.return_1y, ""),
         ("3Y CAGR", p.return_3y, ""),
-        ("5Y CAGR", p.return_5y, "[dim]Long-run trend[/]"),
-        ("10Y CAGR", p.return_10y, "[dim]Cycle-spanning[/]"),
+        ("5Y CAGR", p.return_5y, f"[dim]{_t('note_long_run_trend')}[/]"),
+        ("10Y CAGR", p.return_10y, f"[dim]{_t('note_cycle_spanning')}[/]"),
         ("Since Inception CAGR", p.cagr_since_inception, ""),
     ]
     for label, val, note in rows:
@@ -341,14 +341,14 @@ def render_performance(console: Console, report: ETFReport) -> None:
         if s is None:
             return "[dim]N/A[/]"
         if s >= 1.5:
-            return "[bold green]Excellent[/]"
+            return f"[bold green]{_t('rating_excellent')}[/]"
         if s >= 1.0:
-            return "[green]Strong[/]"
+            return f"[green]{_t('rating_strong')}[/]"
         if s >= 0.5:
-            return "[cyan]Acceptable[/]"
+            return f"[cyan]{_t('rating_acceptable')}[/]"
         if s >= 0:
-            return "[yellow]Weak[/]"
-        return "[bold red]Negative[/]"
+            return f"[yellow]{_t('rating_weak')}[/]"
+        return f"[bold red]{_t('rating_negative')}[/]"
 
     t2.add_row(_t("sharpe_1y"), fmt_num(p.sharpe_1y), _sharpe_assess(p.sharpe_1y))
     t2.add_row(_t("sharpe_3y"), fmt_num(p.sharpe_3y), _sharpe_assess(p.sharpe_3y))
@@ -373,18 +373,18 @@ def render_allocation(console: Console, report: ETFReport) -> None:
         if c is None:
             return "[dim]N/A[/]"
         if c >= 0.5:
-            return "[bold red]Highly concentrated[/]"
+            return f"[bold red]{_t('conc_highly')}[/]"
         if c >= 0.35:
-            return "[yellow]Concentrated[/]"
+            return f"[yellow]{_t('conc_concentrated')}[/]"
         if c >= 0.20:
-            return "[cyan]Moderate[/]"
-        return "[green]Well-diversified[/]"
+            return f"[cyan]{_t('conc_moderate')}[/]"
+        return f"[green]{_t('conc_well_diversified')}[/]"
 
     t.add_row(_t("holdings_count"), fmt_int(a.holdings_count), "")
     t.add_row(_t("top10_concentration"), fmt_pct(a.top10_concentration),
               _conc_assess(a.top10_concentration))
     t.add_row(_t("sector_hhi"), fmt_num(a.herfindahl_sector, 3),
-              "[dim]Lower = more even sector mix[/]"
+              f"[dim]{_t('note_lower_even_sector')}[/]"
               if a.herfindahl_sector is not None else "")
     t.add_row(_t("sector_count"), fmt_int(a.sector_count), "")
     t.add_row(_t("country_count"), fmt_int(a.country_count), "")
@@ -440,36 +440,36 @@ def render_risk(console: Console, report: ETFReport) -> None:
         if v is None:
             return "[dim]N/A[/]"
         if v < 0.10:
-            return "[green]Low volatility[/]"
+            return f"[green]{_t('vol_low')}[/]"
         if v < 0.18:
-            return "[cyan]Equity-like[/]"
+            return f"[cyan]{_t('vol_equity_like')}[/]"
         if v < 0.30:
-            return "[yellow]Elevated[/]"
-        return "[bold red]High[/]"
+            return f"[yellow]{_t('vol_elevated')}[/]"
+        return f"[bold red]{_t('vol_high')}[/]"
 
     def _drawdown_assess(dd):
         if dd is None:
             return "[dim]N/A[/]"
         if dd > -0.10:
-            return "[green]Mild[/]"
+            return f"[green]{_t('dd_mild')}[/]"
         if dd > -0.20:
-            return "[cyan]Typical equity[/]"
+            return f"[cyan]{_t('dd_typical_equity')}[/]"
         if dd > -0.40:
-            return "[yellow]Severe[/]"
-        return "[bold red]Crash-tier[/]"
+            return f"[yellow]{_t('dd_severe')}[/]"
+        return f"[bold red]{_t('dd_crash_tier')}[/]"
 
     t.add_row(_t("volatility_1y"), fmt_pct(r.volatility_1y), _vol_assess(r.volatility_1y))
     t.add_row(_t("volatility_3y"), fmt_pct(r.volatility_3y), _vol_assess(r.volatility_3y))
     t.add_row(_t("max_drawdown_3y"), fmt_pct(r.max_drawdown_3y),
               _drawdown_assess(r.max_drawdown_3y))
     t.add_row(_t("beta_3y"), fmt_num(r.beta_3y),
-              "[dim]Sensitivity to benchmark[/]" if r.beta_3y is not None else "")
+              f"[dim]{_t('note_sensitivity_benchmark')}[/]" if r.beta_3y is not None else "")
     t.add_row(_t("tracking_error"), fmt_pct(r.tracking_error),
-              "[dim]Annualised σ of return gap[/]" if r.tracking_error is not None else "")
+              f"[dim]{_t('note_return_gap')}[/]" if r.tracking_error is not None else "")
     t.add_row(_t("tracking_difference"), fmt_pct(r.tracking_difference),
-              "[dim]TER-adjusted return gap[/]" if r.tracking_difference is not None else "")
+              f"[dim]{_t('note_ter_adjusted_gap')}[/]" if r.tracking_difference is not None else "")
     t.add_row("R²", fmt_num(r.r_squared, 3),
-              "[dim]Explained variance vs benchmark[/]" if r.r_squared is not None else "")
+              f"[dim]{_t('note_explained_variance')}[/]" if r.r_squared is not None else "")
     console.print(t)
 
 
@@ -709,8 +709,8 @@ def render_premium_discount_stats(console: Console, report: ETFReport) -> None:
          if l.mean_abs_deviation_1y is not None else "")
     if l.net_flows_1y is not None:
         flow_note = (
-            "[green]Net inflows[/]" if l.net_flows_1y > 0
-            else "[yellow]Net outflows[/]"
+            f"[green]{_t('note_net_inflows')}[/]" if l.net_flows_1y > 0
+            else f"[yellow]{_t('note_net_outflows')}[/]"
         )
         _add("Net Flows (1Y)", fmt_money(l.net_flows_1y), flow_note)
     if l.authorised_participants is not None:
