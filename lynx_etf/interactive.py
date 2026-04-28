@@ -29,39 +29,38 @@ from lynx_etf.core.ticker import NotAnETFError
 console = Console()
 
 
-BANNER = """
-[bold blue]  L Y N X   ETF Analysis[/]
-[dim]    Costs · Holdings · Performance · Risk[/]
-"""
+def _banner() -> str:
+    return (
+        f"\n[bold blue]  {_t('banner_lynx_etf_analysis')}[/]\n"
+        f"[dim]    {_t('tagline_costs_holdings')}[/]\n"
+    )
 
 
-MENU = """
-[bold cyan]Analysis:[/]
-  [bold]analyze[/] <TICKER|ISIN>           Analyze (uses cache in production mode)
-  [bold]refresh[/] <TICKER|ISIN>           Force fresh data download
-  [bold]search[/] <query>                  Search ETFs by free-text
-
-[bold cyan]Cache:[/]
-  [bold]cache[/]                           List cached ETFs
-  [bold]drop-cache[/] <TICKER>             Remove cached data for an ETF
-  [bold]drop-cache all[/]                  Remove all cached data
-
-[bold cyan]Learn:[/]
-  [bold]explain[/] <metric>                Explain a metric (e.g. expense_ratio)
-  [bold]explain-all[/]                     List every metric explanation
-
-[bold cyan]Other:[/]
-  [bold]about[/]                           Show about, author, and license
-  [bold]help[/]                            Show this menu
-  [bold]quit[/]                            Exit
-"""
+def _menu() -> str:
+    return (
+        f"\n[bold cyan]{_t('menu_analysis')}[/]\n"
+        f"  [bold]analyze[/] <TICKER|ISIN>           {_t('cmd_analyze_desc')}\n"
+        f"  [bold]refresh[/] <TICKER|ISIN>           {_t('cmd_refresh_desc')}\n"
+        f"  [bold]search[/] <query>                  {_t('cmd_search_etf_desc')}\n"
+        f"\n[bold cyan]{_t('menu_cache')}[/]\n"
+        f"  [bold]cache[/]                           {_t('cmd_cache_etf_desc')}\n"
+        f"  [bold]drop-cache[/] <TICKER>             {_t('cmd_drop_cache_etf_desc')}\n"
+        f"  [bold]drop-cache all[/]                  {_t('cmd_drop_cache_all_desc')}\n"
+        f"\n[bold cyan]{_t('menu_learn')}[/]\n"
+        f"  [bold]explain[/] <metric>                {_t('cmd_explain_desc')}\n"
+        f"  [bold]explain-all[/]                     {_t('cmd_explain_all_desc')}\n"
+        f"\n[bold cyan]{_t('menu_other')}[/]\n"
+        f"  [bold]about[/]                           {_t('cmd_about_desc')}\n"
+        f"  [bold]help[/]                            {_t('cmd_help_desc')}\n"
+        f"  [bold]quit[/]                            {_t('cmd_quit_desc')}\n"
+    )
 
 
 def run_interactive(args=None) -> int:
     """Run the interactive prompt loop."""
     from lynx_etf.core.storage import get_mode, is_testing
 
-    console.print(BANNER)
+    console.print(_banner())
 
     if is_testing():
         console.print(Panel(
@@ -78,7 +77,7 @@ def run_interactive(args=None) -> int:
             border_style="green",
         ))
 
-    console.print(Panel(MENU, border_style="cyan", title=f"[bold]{_t('interactive_mode_title')}[/]"))
+    console.print(Panel(_menu(), border_style="cyan", title=f"[bold]{_t('interactive_mode_title')}[/]"))
 
     while True:
         prompt_color = "yellow" if is_testing() else "cyan"
@@ -105,7 +104,7 @@ def run_interactive(args=None) -> int:
             return 0
 
         if cmd in ("help", "h", "?"):
-            console.print(MENU)
+            console.print(_menu())
             continue
 
         if cmd == "about":

@@ -141,7 +141,7 @@ class LynxETFApp(App):
                 f"[bold blue]{APP_NAME} v{__version__}[/]\n"
                 f"[dim]{SUITE_LABEL}[/]\n\n"
                 f"{_t('tui_intro_etf')}\n"
-                "[dim]Stocks, mutual funds and index funds are rejected at the resolver level.[/]\n\n"
+                f"[dim]{_t('tui_resolver_note')}[/]\n\n"
                 f"[dim]{_t('tui_keys_help')}[/]",
                 id="body",
             )
@@ -173,7 +173,7 @@ class LynxETFApp(App):
         self.query_one("#ticker", Input).focus()
 
     def action_clear(self) -> None:
-        self.query_one("#body", Static).update("[dim]Cleared.[/]")
+        self.query_one("#body", Static).update(f"[dim]{_t('cleared')}[/]")
 
     def action_about(self) -> None:
         self.push_screen(AboutModal())
@@ -197,7 +197,7 @@ class LynxETFApp(App):
 
     async def _run_analysis(self, ticker: str) -> None:
         body = self.query_one("#body", Static)
-        body.update(f"[cyan]Analysing {ticker}...[/]")
+        body.update(f"[cyan]{_t('status_analysing').format(ticker=ticker)}[/]")
 
         def _do():
             from lynx_etf.core.analyzer import run_full_analysis

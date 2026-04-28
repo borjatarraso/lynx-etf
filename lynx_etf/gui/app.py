@@ -121,11 +121,11 @@ class SplashScreen:
         tk.Label(center, text="LYNX", font=FONT_SPLASH_TITLE,
                  bg=BG, fg=FG).pack(pady=(0, 2))
 
-        tk.Label(center, text="ETF Analysis", font=FONT_SPLASH_SUB,
+        tk.Label(center, text=_t("hero_subtitle_etf"), font=FONT_SPLASH_SUB,
                  bg=BG, fg=ACCENT).pack(pady=(0, 20))
 
         tk.Label(center,
-                 text="Costs  &  Holdings  &  Performance  &  Risk",
+                 text=_t("tagline_costs_holdings_amp"),
                  font=FONT_SMALL, bg=BG, fg=FG_DIM).pack(pady=(0, 30))
 
         tk.Label(
@@ -143,7 +143,7 @@ class SplashScreen:
         self.bar_fill = tk.Frame(self.bar_frame, bg=ACCENT, height=3, width=0)
         self.bar_fill.place(x=0, y=0, relheight=1)
 
-        self.loading = tk.Label(center, text="Loading...", font=FONT_SMALL,
+        self.loading = tk.Label(center, text=_t("loading"), font=FONT_SMALL,
                                 bg=BG, fg=FG_DIM)
         self.loading.pack()
 
@@ -269,10 +269,10 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                       activeforeground=BTN_FG, tearoff=0)
     file_menu = tk.Menu(menubar, tearoff=0, bg=BG_SURFACE, fg=FG,
                         activebackground=ACCENT, activeforeground=BTN_FG)
-    file_menu.add_command(label="About", command=lambda: _show_about_dialog(root))
+    file_menu.add_command(label=_t("btn_about"), command=lambda: _show_about_dialog(root))
     file_menu.add_separator()
-    file_menu.add_command(label="Quit", command=root.quit, accelerator="Ctrl+Q")
-    menubar.add_cascade(label="File", menu=file_menu)
+    file_menu.add_command(label=_t("btn_quit"), command=root.quit, accelerator="Ctrl+Q")
+    menubar.add_cascade(label=_t("menu_file"), menu=file_menu)
 
     theme_menu = tk.Menu(menubar, tearoff=0, bg=BG_SURFACE, fg=FG,
                          activebackground=ACCENT, activeforeground=BTN_FG)
@@ -282,7 +282,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                 label=name,
                 command=lambda n=name: cycler.set(n) if hasattr(cycler, "set") else None,
             )
-    menubar.add_cascade(label="Themes", menu=theme_menu)
+    menubar.add_cascade(label=_t("menu_themes"), menu=theme_menu)
     root.config(menu=menubar)
 
     # ── Hero ────────────────────────────────────────────────────────────
@@ -302,7 +302,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
     titles = ttk.Frame(hero, style="Lynx.TFrame")
     titles.pack(side=tk.LEFT, fill=tk.X, expand=True)
     ttk.Label(titles, text="Lynx ETF", style="Title.TLabel").pack(anchor=tk.W)
-    ttk.Label(titles, text="Exchange-Traded Fund Analysis",
+    ttk.Label(titles, text=_t("hero_subtitle_etf"),
               style="Sub.TLabel").pack(anchor=tk.W)
     ttk.Label(titles,
               text=f"v{__version__}  {BULLET}  {SUITE_LABEL}",
@@ -360,9 +360,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
     welcome = (
         f"{APP_NAME} v{__version__}\n"
         f"{SUITE_LABEL}\n\n"
-        "Enter an ETF ticker (e.g. SPY, QQQ, VTI) or ISIN above and press "
-        "Analyse. Stocks, mutual funds and index funds are rejected at the "
-        "resolver level.\n"
+        f"{_t('welcome_etf_panel')}\n"
     )
 
     def _write(text: str, tag: str | None = None) -> None:
@@ -384,7 +382,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
         state["busy"] = True
         analyze_btn.state(["disabled"])
         refresh_btn.state(["disabled"])
-        status_var.set(f"Analysing {ticker}…")
+        status_var.set(_t("status_analysing").format(ticker=ticker))
         status_lbl.configure(fg=ACCENT)
 
         no_news = bool(getattr(args, "no_news", False))
@@ -427,11 +425,11 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                     text = payload[1]
                     state["report"] = payload[2] if len(payload) > 2 else None
                     _write(text)
-                    status_var.set("Done.")
+                    status_var.set(_t("status_done"))
                     status_lbl.configure(fg=GREEN)
                 else:
-                    _write(f"Error:\n\n{payload[1]}", "err")
-                    status_var.set("Error.")
+                    _write(f"{_t('status_error_label')}\n\n{payload[1]}", "err")
+                    status_var.set(_t("status_error_short"))
                     status_lbl.configure(fg=RED)
                 state["busy"] = False
                 analyze_btn.state(["!disabled"])
@@ -443,11 +441,11 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
     def _export():
         report = state.get("report")
         if not report:
-            messagebox.showinfo("Export", "Run an analysis first.", parent=root)
+            messagebox.showinfo(_t("btn_export"), _t("export_run_first"), parent=root)
             return
         path = filedialog.asksaveasfilename(
             parent=root,
-            title="Export ETF report",
+            title=_t("dialog_export_etf_title"),
             defaultextension=".txt",
             filetypes=[("Text", "*.txt"), ("HTML", "*.html"), ("All", "*.*")],
         )
@@ -470,9 +468,13 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                 )
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(text)
-            messagebox.showinfo("Export", f"Saved to:\n{path}", parent=root)
+            messagebox.showinfo(_t("btn_export"),
+                                _t("export_saved_to_path").format(path=path),
+                                parent=root)
         except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("Export", f"Failed: {exc}", parent=root)
+            messagebox.showerror(_t("btn_export"),
+                                 _t("export_failed").format(err=exc),
+                                 parent=root)
 
     analyze_btn.configure(command=lambda: _start(refresh=False))
     refresh_btn.configure(command=lambda: _start(refresh=True))
@@ -510,7 +512,7 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
 
 def _show_about_dialog(parent: tk.Tk) -> None:
     win = tk.Toplevel(parent)
-    win.title(f"About — {APP_NAME}")
+    win.title(f"{_t('dialog_about_title')} — {APP_NAME}")
     win.configure(bg=BG)
     win.transient(parent)
     win.geometry("680x540")
@@ -532,22 +534,22 @@ def _show_about_dialog(parent: tk.Tk) -> None:
 
     tk.Label(win, text=f"{about['name']} v{about['version']}",
              font=(_FAMILY, 16, "bold"), bg=BG, fg=ACCENT).pack(pady=(6, 0))
-    tk.Label(win, text=f"Part of {about['suite']} v{about['suite_version']}",
+    tk.Label(win, text=_t("part_of_suite").format(suite=about['suite']) + f" v{about['suite_version']}",
              font=FONT_SMALL, bg=BG, fg=FG_DIM).pack()
-    tk.Label(win, text=f"Released {about['year']}",
+    tk.Label(win, text=_t("released_year").format(year=about['year']),
              font=FONT_SMALL, bg=BG, fg=FG_DIM).pack(pady=(0, 12))
 
     info = tk.Frame(win, bg=BG)
     info.pack(padx=24, pady=4, fill=tk.X)
-    tk.Label(info, text="Developed by:",
+    tk.Label(info, text=_t("developed_by_label"),
              font=FONT_BOLD, bg=BG, fg=FG, anchor=tk.W).grid(row=0, column=0, sticky=tk.W)
     tk.Label(info, text=about['author'],
              font=FONT, bg=BG, fg=FG, anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(8, 0))
-    tk.Label(info, text="Contact:",
+    tk.Label(info, text=_t("contact_label"),
              font=FONT_BOLD, bg=BG, fg=FG, anchor=tk.W).grid(row=1, column=0, sticky=tk.W)
     tk.Label(info, text=about['email'],
              font=FONT, bg=BG, fg=FG, anchor=tk.W).grid(row=1, column=1, sticky=tk.W, padx=(8, 0))
-    tk.Label(info, text="License:",
+    tk.Label(info, text=_t("license_label"),
              font=FONT_BOLD, bg=BG, fg=FG, anchor=tk.W).grid(row=2, column=0, sticky=tk.W)
     tk.Label(info, text=about['license'],
              font=FONT, bg=BG, fg=FG, anchor=tk.W).grid(row=2, column=1, sticky=tk.W, padx=(8, 0))
@@ -556,7 +558,7 @@ def _show_about_dialog(parent: tk.Tk) -> None:
                     bg=BG, fg=FG_DIM, wraplength=620, justify=tk.LEFT)
     desc.pack(padx=24, pady=(14, 8), fill=tk.X)
 
-    btn = ttk.Button(win, text="Close", style="Lynx.TButton",
+    btn = ttk.Button(win, text=_t("close"), style="Lynx.TButton",
                      command=win.destroy)
     btn.pack(pady=(8, 18))
 
