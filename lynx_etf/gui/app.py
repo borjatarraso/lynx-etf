@@ -282,6 +282,24 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
                 label=name,
                 command=lambda n=name: cycler.set(n) if hasattr(cycler, "set") else None,
             )
+        # Custom submenu — user-saved themes from ~/.config/lynx-theme/themes
+        try:
+            from lynx_investor_core.gui_themes import list_user_themes as _list_user_themes
+            _user_themes = _list_user_themes()
+        except Exception:
+            _user_themes = []
+        custom_menu = tk.Menu(theme_menu, tearoff=0, bg=BG_SURFACE, fg=FG,
+                              activebackground=ACCENT, activeforeground=BTN_FG)
+        if _user_themes:
+            for ut in _user_themes:
+                custom_menu.add_command(
+                    label=ut.name,
+                    command=lambda n=ut.name: cycler.set(n) if hasattr(cycler, "set") else None,
+                )
+        else:
+            custom_menu.add_command(label=_t("menu_custom_none"), state="disabled")
+        theme_menu.add_separator()
+        theme_menu.add_cascade(label=_t("menu_custom"), menu=custom_menu)
     menubar.add_cascade(label=_t("menu_themes"), menu=theme_menu)
     root.config(menu=menubar)
 
