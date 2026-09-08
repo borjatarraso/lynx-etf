@@ -17,6 +17,11 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+from lynx_investor_core.debounce import (
+    DEFAULT_COOLDOWN_MS,
+    LAUNCH_COOLDOWN_MS,
+    ClickDebouncer,
+)
 from lynx_investor_core.translations import t as _t
 
 from lynx_etf import (
@@ -263,13 +268,19 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
         apply_theme = None  # type: ignore[assignment]
 
     state = {"busy": False, "q": queue.Queue(), "report": None}
+    # Per-action cooldown gate so rapid double-clicks (Analyze / Refresh
+    # / Export / About / theme menu) can't fire the same action twice.
+    click_gate = ClickDebouncer(cooldown_ms=DEFAULT_COOLDOWN_MS)
 
     # ── Menu ────────────────────────────────────────────────────────────
     menubar = tk.Menu(root, bg=BG_SURFACE, fg=FG, activebackground=ACCENT,
                       activeforeground=BTN_FG, tearoff=0)
     file_menu = tk.Menu(menubar, tearoff=0, bg=BG_SURFACE, fg=FG,
                         activebackground=ACCENT, activeforeground=BTN_FG)
-    file_menu.add_command(label=_t("btn_about"), command=lambda: _show_about_dialog(root))
+    file_menu.add_command(
+        label=_t("btn_about"),
+        command=lambda: click_gate.allow("about") and _show_about_dialog(root),
+    )
     file_menu.add_separator()
     file_menu.add_command(label=_t("btn_quit"), command=root.quit, accelerator="Ctrl+Q")
     menubar.add_cascade(label=_t("menu_file"), menu=file_menu)
@@ -397,6 +408,12 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
         ticker = ticker_var.get().strip()
         if not ticker or state["busy"]:
             return
+        # Belt-and-braces: state["busy"] handles re-entry while a job is
+        # in flight; the gate covers the ~hundreds-of-ms window between
+        # the user clicking and us flipping the flag.
+        if not click_gate.allow(f"analyze:{ticker}:{refresh}",
+                                cooldown_ms=LAUNCH_COOLDOWN_MS):
+            return
         state["busy"] = True
         analyze_btn.state(["disabled"])
         refresh_btn.state(["disabled"])
@@ -457,6 +474,8 @@ def run_gui(args=None, *, initial_ticker: str | None = None) -> int:
         root.after(120, _drain)
 
     def _export():
+        if not click_gate.allow("export"):
+            return
         report = state.get("report")
         if not report:
             messagebox.showinfo(_t("btn_export"), _t("export_run_first"), parent=root)
