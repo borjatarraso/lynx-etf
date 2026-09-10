@@ -77,7 +77,7 @@ Part of the LINCE company · © All rights reserved
 ## Run it
 
 ```bash
-cd ~/claude/lince-investor/lynx-etf
+cd ~/devel/lince-investor/lynx-etf
 ./run                                 # project runner
 lynx-etf                              # console entry point
 python3 -m lynx_etf                   # runnable package
