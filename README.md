@@ -4,6 +4,13 @@
 
 Part of the [Lince Investor Suite](https://github.com/borjatarraso/lynx-dashboard).
 
+## Quick install
+
+```bash
+make    # create .venv and install the package + its dependencies
+./run   # start with the defaults
+```
+
 ## Scope
 
 Strictly **ETFs only**. Stocks, mutual funds, closed-end funds, and index
